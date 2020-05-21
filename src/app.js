@@ -12,6 +12,7 @@ require('./db/mongoose')
 const User = require('./models/user')
 const auth = require('./middleware/auth')
 const productImage = require('./models/productImage')
+const encode = require('./models/encode')
 
 // Defining the class object
 const upload = multer()
@@ -126,11 +127,11 @@ app.post('/billing/:token', auth, upload.single('image'), async(req, res) => {
 
 
 // Add Product Page
-app.get('/addproduct/:token', auth, (req, res) => {
+app.get('/addproduct', auth, (req, res) => {
   res.render('addproduct')
 })
 
-app.post('/addproduct/:token', auth, upload.single('image'), async(req, res) => {
+app.post('/addproduct', auth, upload.single('image'), async(req, res) => {
   await sharp(req.file.buffer).resize({width: 250, height: 250}).toFile('image.png')
   const imagePath = path.join(__dirname, '../image.png')
   const params = {
@@ -143,19 +144,19 @@ app.post('/addproduct/:token', auth, upload.single('image'), async(req, res) => 
       collectionIds: ['663179e7-8856-4872-b255-75bdfc169b1a'],
       features: ['objects'],
     };
-  fs.unlinkSync(imagePath)
-  console.log('He')
   const response = await visualRecognition.analyze(params)
   const objects = response.result.images[0].objects.collections[0].objects
-  console.log(objects)
+  //console.log(objects)
   var products = []
   var pImages = []
-  objects.forEach(async(comp) => {
+  for (const comp of objects) {
     const item = await productImage.findOne({product: comp.object})
-    console.log(item)
     products.push(item.product)
-    pImages.push(item.image)
-  })
+    var bytes = new Uint8Array(item.image.buffer);
+    src = 'data:image/png;base64,'+encode(bytes);
+    pImages.push(src)
+  }
+  res.render('addproduct')
 })
 
 // Add Product image
