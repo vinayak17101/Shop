@@ -1,15 +1,25 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Image form</title>
+        <link rel="icon" href="./img/title.png">
+        <link rel="stylesheet" href="addproduct.css">
+        <title>Add Items</title>
     </head>
     <body>
         {{>userHeader}}
-        {{products}}
-        <form method="POST" enctype="multipart/form-data" id="image-form">
-            <input type="file" name="image">
-            <button type="submit" class="btn btn-success">Upload</button>
-        </form>
+        <div class="container">
+            <form method="POST" enctype="multipart/form-data" id="image-form">
+                <input type="file" name="image">
+                <button type="submit" class="btn btn-success">Upload</button>
+            </form>
+            {{#each products}}
+                <div class="image">
+                    <img src="{{this.image}}">
+                    <h3>{{this.name}}</h3>
+                    <a href="#" class="add-cart">Add Cart</a>
+                </div>
+            {{/each}}
+        </div>
     </body>
     <script>
         var token = window.location.href.split('/')[4]

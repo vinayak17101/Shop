@@ -128,7 +128,7 @@ app.post('/billing/:token', auth, upload.single('image'), async(req, res) => {
 
 // Add Product Page
 app.get('/addproduct', auth, (req, res) => {
-  res.render('addproduct')
+  res.render('addproduct', {})
 })
 
 app.post('/addproduct', auth, upload.single('image'), async(req, res) => {
@@ -146,17 +146,19 @@ app.post('/addproduct', auth, upload.single('image'), async(req, res) => {
     };
   const response = await visualRecognition.analyze(params)
   const objects = response.result.images[0].objects.collections[0].objects
-  //console.log(objects)
   var products = []
-  var pImages = []
   for (const comp of objects) {
     const item = await productImage.findOne({product: comp.object})
-    products.push(item.product)
     var bytes = new Uint8Array(item.image.buffer);
     src = 'data:image/png;base64,'+encode(bytes);
-    pImages.push(src)
+    products.push({
+      name: item.product,
+      image: src
+    })
   }
-  res.render('addproduct')
+  res.render('addproduct', {
+    products
+  })
 })
 
 // Add Product image
