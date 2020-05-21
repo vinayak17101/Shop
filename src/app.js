@@ -5,6 +5,8 @@ const express = require('express')
 const hbs = require('hbs')
 const multer = require('multer')
 const sharp = require('sharp')
+const cookieParser = require('cookie-parser')
+const session = require('express-session')
 const visualRecognition = require('./models/visual-recognition')
 require('./db/mongoose')
 const User = require('./models/user')
@@ -26,9 +28,10 @@ app.set('view engine', 'hbs')
 app.set('views', viewDirectory)
 hbs.registerPartials(partialDirectory)
 app.use(express.static(publicDirectory))
-
 app.use(express.json())
 app.use(express.urlencoded({extended: false}))
+app.use(cookieParser())
+app.use(session({secret: 'thisisme', saveUninitialized: true, resave: true}))
 
 // Startup Page
 app.get('/', (req, res) => {
@@ -45,8 +48,10 @@ app.post('/signup', async(req, res) => {
   try {
       await user.save()
       const token = await user.generateAuthToken()
-      res.redirect("/home/" + token)
+      res.cookie('jwt', token)
+      res.redirect("/home")
   } catch (e) {
+    console.log(e)
       res.render('signup', {
         errorMessage: 'Account with same email id exists! Try with different one.'
       })
@@ -62,7 +67,8 @@ app.post('/login', async(req, res) => {
   try {
     const user = await User.findByCredentials(req.body.email, req.body.password)
     const token = await user.generateAuthToken()
-    res.redirect('/home/' + token)
+    res.cookie('jwt', token)
+    res.redirect('/home')
   } catch (e) {
       res.render('login', {
         errorMessage: 'Provided credentials is not correct! Please try again.'
@@ -71,7 +77,7 @@ app.post('/login', async(req, res) => {
 })
 
 // Logout Page
-app.get('/users/logout/:token', auth, async (req, res) => {
+app.get('/logout', auth, async (req, res) => {
   try {
       req.user.tokens = req.user.tokens.filter((token) => {
           return token.token !== req.token
@@ -85,7 +91,7 @@ app.get('/users/logout/:token', auth, async (req, res) => {
 })
 
 // Home page
-app.get('/home/:token', auth, (req, res) => {
+app.get('/home', auth, (req, res) => {
   res.render('home')
 })
 

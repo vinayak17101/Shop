@@ -1,6 +1,6 @@
 var token = window.location.href.split('/')[4]
 function logout() {
-    url = '/users/logout/' + token
+    url = '/logout'
     window.location.href = url
 }
 function newbill() {
